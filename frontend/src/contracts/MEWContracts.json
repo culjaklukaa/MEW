@@ -701,6 +701,33 @@
       {
         "type": "event",
         "anonymous": false,
+        "name": "ParcelRegistered",
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": "tokenId",
+            "indexed": true
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "indexed": false
+          },
+          {
+            "type": "string",
+            "name": "location",
+            "indexed": false
+          },
+          {
+            "type": "uint256",
+            "name": "area",
+            "indexed": false
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "anonymous": false,
         "name": "Transfer",
         "inputs": [
           {
@@ -830,6 +857,18 @@
           {
             "type": "string",
             "name": "uri"
+          },
+          {
+            "type": "string",
+            "name": "name"
+          },
+          {
+            "type": "string",
+            "name": "location"
+          },
+          {
+            "type": "uint256",
+            "name": "area"
           }
         ],
         "outputs": [
@@ -883,6 +922,33 @@
           {
             "type": "address",
             "name": ""
+          }
+        ]
+      },
+      {
+        "type": "function",
+        "name": "parcelDetails",
+        "constant": true,
+        "stateMutability": "view",
+        "payable": false,
+        "inputs": [
+          {
+            "type": "uint256",
+            "name": ""
+          }
+        ],
+        "outputs": [
+          {
+            "type": "string",
+            "name": "name"
+          },
+          {
+            "type": "string",
+            "name": "location"
+          },
+          {
+            "type": "uint256",
+            "name": "area"
           }
         ]
       },

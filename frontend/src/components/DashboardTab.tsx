@@ -26,9 +26,31 @@ export default function DashboardTab({ parcels }: DashboardTabProps) {
         ) : parcels.map(p => (
           <div className="card parcel-card" key={p.id}>
             <div className="parcel-header">
-              <span className="parcel-id">Parcel #{p.id}</span>
+              <div className="parcel-header-left">
+                <span className="parcel-id">
+                  {p.metadata?.name || `Parcel #${p.id}`}
+                </span>
+                <span className="parcel-id-sub">#{p.id}</span>
+              </div>
               {renderStateBadge(p.state, p.isReleased)}
             </div>
+
+            {/* Metadata row */}
+            {p.metadata && (
+              <div className="parcel-meta-row">
+                {p.metadata.location && (
+                  <span className="meta-chip" title={p.metadata.location}>
+                    📍 {p.metadata.location.length > 30 ? p.metadata.location.slice(0, 30) + '…' : p.metadata.location}
+                  </span>
+                )}
+                {p.metadata.area > 0 && (
+                  <span className="meta-chip">
+                    📐 {p.metadata.area.toLocaleString()} m²
+                  </span>
+                )}
+              </div>
+            )}
+
             <div className="parcel-details">
               <div className="detail-row">
                 <span className="detail-label">Escrowed:</span>

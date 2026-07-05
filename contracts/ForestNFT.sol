@@ -9,17 +9,33 @@ contract ForestNFT is ERC721URIStorage, Ownable {
 
     enum ForestState { Planted, Growing, Verified }
 
+    struct ParcelDetails {
+        string name;
+        string location;
+        uint256 area;
+    }
+
     mapping(uint256 => ForestState) public forestStates;
+    mapping(uint256 => ParcelDetails) public parcelDetails;
 
     event ForestStateUpdated(uint256 indexed tokenId, ForestState state);
+    event ParcelRegistered(uint256 indexed tokenId, string name, string location, uint256 area);
 
     constructor() ERC721("MEW - Mostar Eco View Forest", "CFOR") Ownable(msg.sender) {}
 
-    function mintForest(address to, string memory uri) public returns (uint256) {
+    function mintForest(
+        address to,
+        string memory uri,
+        string memory name,
+        string memory location,
+        uint256 area
+    ) public returns (uint256) {
         uint256 tokenId = _nextTokenId++;
         _mint(to, tokenId);
         _setTokenURI(tokenId, uri);
         forestStates[tokenId] = ForestState.Planted;
+        parcelDetails[tokenId] = ParcelDetails(name, location, area);
+        emit ParcelRegistered(tokenId, name, location, area);
         return tokenId;
     }
 

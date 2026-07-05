@@ -44,7 +44,13 @@ async function main() {
   
   // 2. Worker mints NFT
   console.log("Worker is minting Forest NFT...");
-  let tx = await forestNFT.connect(worker).mintForest(worker.address, "ipfs://mock-uri");
+  let tx = await forestNFT.connect(worker).mintForest(
+    worker.address,
+    "ipfs://mock-uri",
+    "Neretva Valley Plot",
+    "43.3438, 17.8078",
+    5000 // area in m²
+  );
   await tx.wait();
   const tokenId = 0;
   console.log(`Forest NFT minted with Token ID: ${tokenId}. State: Planted (0)`);

@@ -42,9 +42,21 @@ describe("MEW Escrow Lifecycle", function () {
     const depositAmount = ethers.parseUnits("1000", 18);
     const targetNDVI = 750; // out of 1000
 
-    // 1. Worker mints NFT (Parcel)
-    await forestNFT.connect(worker).mintForest(worker.address, "ipfs://mock-uri");
+    // 1. Worker mints NFT (Parcel) with details
+    await forestNFT.connect(worker).mintForest(
+      worker.address,
+      "ipfs://mock-uri",
+      "Test Parcel Alpha",
+      "43.3438, 17.8078",
+      2500 // area in m²
+    );
     const tokenId = 0; // First token minted
+
+    // Verify parcel details stored on-chain
+    const details = await forestNFT.parcelDetails(tokenId);
+    expect(details.name).to.equal("Test Parcel Alpha");
+    expect(details.location).to.equal("43.3438, 17.8078");
+    expect(details.area).to.equal(2500);
 
     // 2. Mint USDC to sponsor and approve escrow
     await mockUSDC.mint(sponsor.address, depositAmount);

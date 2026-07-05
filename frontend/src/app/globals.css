@@ -581,3 +581,170 @@ h1, h2, h3, h4, h5, h6 {
   background: var(--accent-primary);
   transition: width 1s linear;
 }
+
+/* ============================================================
+   PLANT FORM
+   ============================================================ */
+.plant-form-card {
+  max-width: 680px;
+}
+
+.plant-description {
+  color: var(--muted);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.plant-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group .input-label {
+  margin-bottom: 0.5rem;
+}
+
+.required {
+  color: var(--accent-secondary);
+}
+
+.location-toggle {
+  display: flex;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  margin-bottom: 0.75rem;
+  width: fit-content;
+}
+
+.toggle-btn {
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  transition: all 0.2s;
+}
+
+.toggle-btn.active {
+  background: var(--bg-secondary);
+  color: var(--foreground);
+  box-shadow: var(--shadow-sm);
+}
+
+.coord-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.coord-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.coord-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.area-conversion {
+  font-size: 0.8rem;
+  color: var(--accent-primary);
+  font-weight: 600;
+  margin-top: -0.5rem;
+}
+
+/* Mint Preview Card */
+.mint-preview {
+  background: var(--bg-primary);
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.preview-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-primary);
+  margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.preview-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.preview-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.preview-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.preview-value {
+  color: var(--foreground);
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   DASHBOARD METADATA
+   ============================================================ */
+.parcel-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.parcel-id-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--muted-dim);
+  font-weight: 500;
+}
+
+.parcel-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.meta-chip {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--bg-primary);
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}

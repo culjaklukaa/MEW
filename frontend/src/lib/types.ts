@@ -6,6 +6,12 @@ export interface LogEntry {
   msg: string;
 }
 
+export interface ParcelMetadata {
+  name: string;
+  location: string;
+  area: number; // in m²
+}
+
 export interface Parcel {
   id: number;
   state: number; // 0=Planted, 1=Growing, 2=Verified
@@ -14,4 +20,5 @@ export interface Parcel {
   currentNDVI: number;
   isReleased: boolean;
   owner: string;
+  metadata?: ParcelMetadata;
 }

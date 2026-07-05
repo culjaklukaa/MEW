@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import { getContracts, roles } from "@/lib/ethers";
 import ContractData from "@/contracts/MEWContracts.json";
-import { Role, Tab, LogEntry, Parcel } from "@/lib/types";
+import { Role, Tab, LogEntry, Parcel, ParcelMetadata } from "@/lib/types";
 
 // Import Modular Components
 import DashboardTab from "@/components/DashboardTab";
@@ -60,6 +60,19 @@ export default function Home() {
           totalEscrowAmount += amt;
           totalNdvi += Number(currentNDVI);
 
+          // Fetch on-chain parcel details
+          let metadata: ParcelMetadata | undefined;
+          try {
+            const details = await forestNFT.parcelDetails(id);
+            metadata = {
+              name: details.name,
+              location: details.location,
+              area: Number(details.area),
+            };
+          } catch {
+            // Contract may not have parcelDetails for older tokens
+          }
+
           loadedParcels.push({
             id,
             state: Number(state),
@@ -67,7 +80,8 @@ export default function Home() {
             targetNDVI: Number(escrowData.targetNDVIScore),
             currentNDVI: Number(currentNDVI),
             isReleased: escrowData.isReleased,
-            owner
+            owner,
+            metadata,
           });
           id++;
         } catch (e) {
@@ -148,14 +162,20 @@ export default function Home() {
   }, [simActiveForId, loadParcels]);
 
   // === ACTIONS ===
-  const handlePlant = async () => {
+  const handlePlant = async (metadata: ParcelMetadata) => {
     setLoading(true);
     try {
-      addLog("🌱 Minting new Forest Parcel...");
+      addLog(`🌱 Registering parcel "${metadata.name}"...`);
       const { forestNFT } = await getContracts(roles.worker);
-      const tx = await forestNFT.mintForest(roles.worker, "ipfs://new-parcel");
+      const tx = await forestNFT.mintForest(
+        roles.worker,
+        "ipfs://new-parcel",
+        metadata.name,
+        metadata.location,
+        metadata.area
+      );
       await tx.wait();
-      addLog(`✅ New parcel planted!`);
+      addLog(`✅ Parcel "${metadata.name}" registered! (${metadata.area.toLocaleString()} m² at ${metadata.location})`);
       await loadParcels();
     } catch (e: any) {
       addLog(`❌ Mint failed: ${e.message}`);

@@ -16,14 +16,14 @@ import WelcomePage from "@/components/WelcomePage";
 
 export default function Home() {
   const [appStarted, setAppStarted] = useState<boolean>(false);
-  
+
   const [activeRole, setActiveRole] = useState<Role>("worker");
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   const [parcels, setParcels] = useState<Parcel[]>([]);
-  
+
   // Dashboard Aggregates
   const [totalDonated, setTotalDonated] = useState("0");
   const [totalPlanted, setTotalPlanted] = useState(0);
@@ -31,7 +31,7 @@ export default function Home() {
 
   // Simulation State
   const [simActiveForId, setSimActiveForId] = useState<number | null>(null);
-  const [simMonthsPassed, setSimMonthsPassed] = useState(0);
+  const [simMonthsPassed, setSimMonthsPassed] = useState<Record<number, number>>({});
 
   const addLog = (msg: string) => {
     const time = new Date().toLocaleTimeString();
@@ -40,10 +40,10 @@ export default function Home() {
 
   const loadParcels = useCallback(async () => {
     if (!appStarted) return; // Don't load if app hasn't started yet
-    
+
     try {
       const { forestNFT, escrow, mockOracle } = await getContracts(roles.worker);
-      
+
       let id = 0;
       const loadedParcels: Parcel[] = [];
       let totalEscrowAmount = 0;
@@ -97,26 +97,40 @@ export default function Home() {
   // Simulation Timer Logic
   useEffect(() => {
     let timer: NodeJS.Timeout;
+    
     if (simActiveForId !== null) {
+      let localMonthsPassed = simMonthsPassed[simActiveForId] || 0; // Track purely in closure
+      
       timer = setInterval(async () => {
-        setSimMonthsPassed(m => m + 6);
-        
         try {
-          const parcel = parcels.find(p => p.id === simActiveForId);
-          if (!parcel) return;
+          const { escrow } = await getContracts(roles.worker);
+          const { mockOracle: adminOracle } = await getContracts(roles.deployer);
+          
+          const currentNDVI = await adminOracle.getNDVIScore(simActiveForId);
+          const currentNDVINum = Number(currentNDVI);
+          
+          const escrowData = await escrow.escrows(simActiveForId);
+          const targetNDVI = Number(escrowData.targetNDVIScore);
+          const isReleased = escrowData.isReleased;
 
-          const { mockOracle, escrow } = await getContracts(roles.worker);
-          
+          if (isReleased) {
+            setSimActiveForId(null);
+            return;
+          }
+
           // Increase NDVI
-          const increment = Math.floor(Math.random() * 50) + 50; // +50 to +100 per 6mo
-          const newScore = Math.min(parcel.currentNDVI + increment, 1000);
+          const increment = Math.floor(Math.random() * 50) + 50;
+          const newScore = Math.min(currentNDVINum + increment, 1000);
           
-          const tx = await mockOracle.updateNDVIScore(simActiveForId, newScore);
+          const tx = await adminOracle.updateNDVIScore(simActiveForId, newScore);
           await tx.wait();
-          addLog(`📡 Parcel #${simActiveForId}: Time Passed 6mo. NDVI updated to ${newScore}`);
+          
+          localMonthsPassed += 6;
+          setSimMonthsPassed(prev => ({ ...prev, [simActiveForId]: localMonthsPassed }));
+          addLog(`📡 Parcel #${simActiveForId}: Month ${localMonthsPassed}. NDVI updated to ${newScore}`);
 
           // Check Release
-          if (newScore >= parcel.targetNDVI && !parcel.isReleased) {
+          if (newScore >= targetNDVI && !isReleased) {
             addLog(`✅ Parcel #${simActiveForId}: Target reached! Attempting release...`);
             const releaseTx = await escrow.checkAndRelease(simActiveForId);
             await releaseTx.wait();
@@ -131,7 +145,7 @@ export default function Home() {
       }, 5000);
     }
     return () => clearInterval(timer);
-  }, [simActiveForId, parcels, loadParcels]);
+  }, [simActiveForId, loadParcels]);
 
   // === ACTIONS ===
   const handlePlant = async () => {
@@ -152,7 +166,8 @@ export default function Home() {
 
   const handleFund = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const id = Number(fd.get("parcelId"));
     const amt = fd.get("amount") as string;
     const target = Number(fd.get("targetNDVI"));
@@ -161,9 +176,9 @@ export default function Home() {
     try {
       addLog(`💰 Sponsoring Parcel #${id} with ${amt} USDC...`);
       const { mockUSDC, escrow } = await getContracts(roles.sponsor);
-      
+
       const parsedAmt = ethers.parseUnits(amt, 18);
-      
+
       const appTx = await mockUSDC.approve(ContractData.MEWEscrow.address, parsedAmt);
       await appTx.wait();
 
@@ -172,7 +187,7 @@ export default function Home() {
 
       addLog(`✅ Funded Parcel #${id} successfully!`);
       await loadParcels();
-      e.currentTarget.reset();
+      form.reset();
     } catch (e: any) {
       addLog(`❌ Fund failed: ${e.message}`);
     } finally {
@@ -183,11 +198,11 @@ export default function Home() {
   // If user hasn't started the app, show the Welcome Landing Page
   if (!appStarted) {
     return (
-      <WelcomePage 
+      <WelcomePage
         onEnter={(role) => {
           setActiveRole(role);
           setAppStarted(true);
-        }} 
+        }}
       />
     );
   }
@@ -196,8 +211,8 @@ export default function Home() {
   return (
     <>
       <header className="top-header">
-        <div 
-          className="brand-area animate-in" 
+        <div
+          className="brand-area animate-in"
           onClick={() => setAppStarted(false)}
           style={{ cursor: 'pointer' }}
           title="Return to Welcome Page"
@@ -205,8 +220,8 @@ export default function Home() {
           <div className="brand-icon">🌿</div>
           <h1 className="brand-title">EcoView</h1>
         </div>
-        
-        <nav className="nav-menu animate-in" style={{animationDelay: '0.1s'}}>
+
+        <nav className="nav-menu animate-in" style={{ animationDelay: '0.1s' }}>
           <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('dashboard')}>
             Dashboard
           </button>
@@ -223,7 +238,7 @@ export default function Home() {
       </header>
 
       {/* STATS STRIP */}
-      <div className="stats-strip animate-in" style={{animationDelay: '0.2s'}}>
+      <div className="stats-strip animate-in" style={{ animationDelay: '0.2s' }}>
         <div className="stat-box">
           <div className="stat-inner">
             <div className="stat-label">Total Donated (USDC)</div>
@@ -243,16 +258,16 @@ export default function Home() {
           </div>
         </div>
         <div className="stat-box">
-          <div className="stat-inner" style={{justifyContent: 'center', gap: '0.75rem'}}>
-            <div className="stat-label" style={{textAlign: 'center'}}>Active Role</div>
+          <div className="stat-inner" style={{ justifyContent: 'center', gap: '0.75rem' }}>
+            <div className="stat-label" style={{ textAlign: 'center' }}>Active Role</div>
             <div className="role-selector">
-              <button 
+              <button
                 className={`role-pill ${activeRole === 'worker' ? 'active' : ''}`}
                 onClick={() => setActiveRole('worker')}
               >
                 👷 Worker
               </button>
-              <button 
+              <button
                 className={`role-pill ${activeRole === 'sponsor' ? 'active' : ''}`}
                 onClick={() => setActiveRole('sponsor')}
               >
@@ -263,36 +278,36 @@ export default function Home() {
         </div>
       </div>
 
-      <main className="main-layout animate-in" style={{animationDelay: '0.3s'}}>
-        
+      <main className="main-layout animate-in" style={{ animationDelay: '0.3s' }}>
+
         {/* LEFT CONTENT AREA */}
         <div className="content-area">
           {activeTab === 'dashboard' && <DashboardTab parcels={parcels} />}
-          
+
           {activeTab === 'plant' && (
-            <PlantTab 
-              activeRole={activeRole} 
-              loading={loading} 
-              onPlant={handlePlant} 
+            <PlantTab
+              activeRole={activeRole}
+              loading={loading}
+              onPlant={handlePlant}
             />
           )}
-          
+
           {activeTab === 'fund' && (
-            <FundTab 
-              parcels={parcels} 
-              activeRole={activeRole} 
-              loading={loading} 
-              onFund={handleFund} 
+            <FundTab
+              parcels={parcels}
+              activeRole={activeRole}
+              loading={loading}
+              onFund={handleFund}
             />
           )}
-          
+
           {activeTab === 'satellite' && (
-            <SatelliteTab 
-              parcels={parcels} 
-              simActiveForId={simActiveForId} 
-              simMonthsPassed={simMonthsPassed} 
-              onStartSim={(id) => { setSimActiveForId(id); setSimMonthsPassed(0); }}
-              onStopSim={() => { setSimActiveForId(null); setSimMonthsPassed(0); }}
+            <SatelliteTab
+              parcels={parcels}
+              simActiveForId={simActiveForId}
+              simMonthsPassed={simActiveForId !== null ? (simMonthsPassed[simActiveForId] || 0) : 0}
+              onStartSim={(id) => { setSimActiveForId(id); }}
+              onStopSim={() => { setSimActiveForId(null); }}
             />
           )}
         </div>

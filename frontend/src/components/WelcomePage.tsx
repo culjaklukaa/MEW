@@ -17,8 +17,8 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
       </header>
 
       {/* HERO SECTION */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '4rem 2rem', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.1, fontFamily: "'Outfit', sans-serif" }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(2rem, 5vw, 4rem) clamp(1rem, 5vw, 2rem)', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)', fontWeight: 800, color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.1, fontFamily: "'Outfit', sans-serif" }}>
           Decentralized Reforestation,<br />
           <span style={{ color: 'var(--accent-primary)' }}>Verified by Satellite</span>
         </h1>
@@ -45,7 +45,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
         </div>
 
         {/* FEATURE GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', width: '100%', textAlign: 'left' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', width: '100%', textAlign: 'left' }}>
           
           <div className="card">
             <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🌱</div>

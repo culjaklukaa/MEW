@@ -16,7 +16,7 @@ export default function FundTab({ parcels, activeRole, loading, onFund }: FundTa
       <div className="page-title-box">
         <h2 className="page-title">Sponsor Project</h2>
       </div>
-      <div className="card" style={{maxWidth: '600px'}}>
+      <div className="card">
         <p style={{color: 'var(--muted)', marginBottom: '2rem', lineHeight: 1.6}}>
           Deposit USDC into the Escrow contract for a specific Parcel. Funds automatically unlock when Satellite NDVI readings hit the Target.
         </p>

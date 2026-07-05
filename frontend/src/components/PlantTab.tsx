@@ -13,7 +13,7 @@ export default function PlantTab({ activeRole, loading, onPlant }: PlantTabProps
       <div className="page-title-box">
         <h2 className="page-title">Register Area</h2>
       </div>
-      <div className="card" style={{maxWidth: '600px'}}>
+      <div className="card">
         <p style={{color: 'var(--muted)', marginBottom: '2rem', lineHeight: 1.6}}>
           As a Worker, you can mint a new Forest NFT which registers a physical plot of land on the blockchain. Once minted, Sponsors can fund it.
         </p>

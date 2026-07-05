@@ -23,7 +23,7 @@ export default function SatelliteTab({
       <div className="page-title-box">
         <h2 className="page-title">Simulate Growth</h2>
       </div>
-      <div className="card" style={{maxWidth: '700px'}}>
+      <div className="card">
         <p style={{color: 'var(--muted)', marginBottom: '2rem', lineHeight: 1.6}}>
           Watch trees grow! Select a funded parcel and start the time simulator. Every 5 seconds equals 6 months of growth, increasing the NDVI score until Escrow is automatically released.
         </p>

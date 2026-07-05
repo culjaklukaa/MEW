@@ -6,14 +6,17 @@ import { getContracts, roles } from "@/lib/ethers";
 import ContractData from "@/contracts/MEWContracts.json";
 import { Role, Tab, LogEntry, Parcel } from "@/lib/types";
 
-// Import Modular Tabs
+// Import Modular Components
 import DashboardTab from "@/components/DashboardTab";
 import PlantTab from "@/components/PlantTab";
 import FundTab from "@/components/FundTab";
 import SatelliteTab from "@/components/SatelliteTab";
 import LogsPanel from "@/components/LogsPanel";
+import WelcomePage from "@/components/WelcomePage";
 
 export default function Home() {
+  const [appStarted, setAppStarted] = useState<boolean>(false);
+  
   const [activeRole, setActiveRole] = useState<Role>("worker");
   const [activeTab, setActiveTab] = useState<Tab>("dashboard");
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -36,6 +39,8 @@ export default function Home() {
   };
 
   const loadParcels = useCallback(async () => {
+    if (!appStarted) return; // Don't load if app hasn't started yet
+    
     try {
       const { forestNFT, escrow, mockOracle } = await getContracts(roles.worker);
       
@@ -79,50 +84,39 @@ export default function Home() {
     } catch (err) {
       console.error("Error loading parcels", err);
     }
-  }, []);
+  }, [appStarted]);
 
   useEffect(() => {
-    loadParcels();
-    const int = setInterval(loadParcels, 5000);
-    return () => clearInterval(int);
-  }, [loadParcels]);
+    if (appStarted) {
+      loadParcels();
+      const int = setInterval(loadParcels, 5000);
+      return () => clearInterval(int);
+    }
+  }, [appStarted, loadParcels]);
 
   // Simulation Timer Logic
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    let localMonthsPassed = 0; // Track purely in closure
-    
     if (simActiveForId !== null) {
       timer = setInterval(async () => {
+        setSimMonthsPassed(m => m + 6);
+        
         try {
-          const { escrow } = await getContracts(roles.worker);
-          const { mockOracle: adminOracle } = await getContracts(roles.deployer);
-          
-          const currentNDVI = await adminOracle.getNDVIScore(simActiveForId);
-          const currentNDVINum = Number(currentNDVI);
-          
-          const escrowData = await escrow.escrows(simActiveForId);
-          const targetNDVI = Number(escrowData.targetNDVIScore);
-          const isReleased = escrowData.isReleased;
+          const parcel = parcels.find(p => p.id === simActiveForId);
+          if (!parcel) return;
 
-          if (isReleased) {
-            setSimActiveForId(null);
-            return;
-          }
-
+          const { mockOracle, escrow } = await getContracts(roles.worker);
+          
           // Increase NDVI
-          const increment = Math.floor(Math.random() * 50) + 50;
-          const newScore = Math.min(currentNDVINum + increment, 1000);
+          const increment = Math.floor(Math.random() * 50) + 50; // +50 to +100 per 6mo
+          const newScore = Math.min(parcel.currentNDVI + increment, 1000);
           
-          const tx = await adminOracle.updateNDVIScore(simActiveForId, newScore);
+          const tx = await mockOracle.updateNDVIScore(simActiveForId, newScore);
           await tx.wait();
-          
-          localMonthsPassed += 6;
-          setSimMonthsPassed(localMonthsPassed);
-          addLog(`📡 Parcel #${simActiveForId}: Month ${localMonthsPassed}. NDVI updated to ${newScore}`);
+          addLog(`📡 Parcel #${simActiveForId}: Time Passed 6mo. NDVI updated to ${newScore}`);
 
           // Check Release
-          if (newScore >= targetNDVI && !isReleased) {
+          if (newScore >= parcel.targetNDVI && !parcel.isReleased) {
             addLog(`✅ Parcel #${simActiveForId}: Target reached! Attempting release...`);
             const releaseTx = await escrow.checkAndRelease(simActiveForId);
             await releaseTx.wait();
@@ -137,7 +131,7 @@ export default function Home() {
       }, 5000);
     }
     return () => clearInterval(timer);
-  }, [simActiveForId, loadParcels]);
+  }, [simActiveForId, parcels, loadParcels]);
 
   // === ACTIONS ===
   const handlePlant = async () => {
@@ -158,8 +152,7 @@ export default function Home() {
 
   const handleFund = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.currentTarget;
-    const fd = new FormData(form);
+    const fd = new FormData(e.currentTarget);
     const id = Number(fd.get("parcelId"));
     const amt = fd.get("amount") as string;
     const target = Number(fd.get("targetNDVI"));
@@ -179,7 +172,7 @@ export default function Home() {
 
       addLog(`✅ Funded Parcel #${id} successfully!`);
       await loadParcels();
-      form.reset();
+      e.currentTarget.reset();
     } catch (e: any) {
       addLog(`❌ Fund failed: ${e.message}`);
     } finally {
@@ -187,10 +180,28 @@ export default function Home() {
     }
   };
 
+  // If user hasn't started the app, show the Welcome Landing Page
+  if (!appStarted) {
+    return (
+      <WelcomePage 
+        onEnter={(role) => {
+          setActiveRole(role);
+          setAppStarted(true);
+        }} 
+      />
+    );
+  }
+
+  // Otherwise, render the main dashboard app shell
   return (
     <>
       <header className="top-header">
-        <div className="brand-area animate-in">
+        <div 
+          className="brand-area animate-in" 
+          onClick={() => setAppStarted(false)}
+          style={{ cursor: 'pointer' }}
+          title="Return to Welcome Page"
+        >
           <div className="brand-icon">🌿</div>
           <h1 className="brand-title">EcoView</h1>
         </div>

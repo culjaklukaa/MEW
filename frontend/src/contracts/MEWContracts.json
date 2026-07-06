@@ -1196,12 +1196,17 @@
             "type": "uint256",
             "name": "amount",
             "indexed": false
+          },
+          {
+            "type": "uint8",
+            "name": "phase",
+            "indexed": false
           }
         ]
       },
       {
         "type": "function",
-        "name": "checkAndRelease",
+        "name": "checkMilestones",
         "constant": false,
         "payable": false,
         "inputs": [
@@ -1260,15 +1265,15 @@
           },
           {
             "type": "uint256",
-            "name": "amount"
+            "name": "totalAmount"
           },
           {
             "type": "uint256",
             "name": "targetNDVIScore"
           },
           {
-            "type": "bool",
-            "name": "isReleased"
+            "type": "uint8",
+            "name": "currentPhase"
           }
         ]
       },

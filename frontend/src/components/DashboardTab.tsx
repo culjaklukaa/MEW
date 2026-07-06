@@ -6,10 +6,12 @@ interface DashboardTabProps {
 }
 
 export default function DashboardTab({ parcels }: DashboardTabProps) {
-  const renderStateBadge = (state: number, isReleased: boolean) => {
+  const renderStateBadge = (state: number, isReleased: boolean, targetNDVI: number, currentNDVI: number) => {
     if (isReleased || state === 2) return <span className="parcel-badge badge-verified">Verified</span>;
-    if (state === 1) return <span className="parcel-badge badge-growing">Growing</span>;
-    return <span className="parcel-badge badge-planted">Planted</span>;
+    if (currentNDVI > 100) return <span className="parcel-badge badge-growing">Growing</span>;
+    if (currentNDVI > 0) return <span className="parcel-badge badge-planted">Planted</span>;
+    if (targetNDVI > 0) return <span className="parcel-badge badge-funded">Funded</span>;
+    return <span className="parcel-badge badge-registered">Registered</span>;
   };
 
   return (
@@ -21,7 +23,7 @@ export default function DashboardTab({ parcels }: DashboardTabProps) {
       <div className="parcels-grid">
         {parcels.length === 0 ? (
           <div className="card" style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', minHeight: '150px', alignItems: 'center'}}>
-            <p style={{color: 'var(--muted)'}}>No parcels planted yet.</p>
+            <p style={{color: 'var(--muted)'}}>No parcels registered yet.</p>
           </div>
         ) : parcels.map(p => (
           <div className="card parcel-card" key={p.id}>
@@ -32,7 +34,7 @@ export default function DashboardTab({ parcels }: DashboardTabProps) {
                 </span>
                 <span className="parcel-id-sub">#{p.id}</span>
               </div>
-              {renderStateBadge(p.state, p.isReleased)}
+              {renderStateBadge(p.state, p.isReleased, p.targetNDVI, p.currentNDVI)}
             </div>
 
             {/* Metadata row */}

@@ -12,7 +12,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
       <header className="top-header" style={{ borderBottom: 'none', backgroundColor: 'transparent' }}>
         <div className="brand-area">
           <div className="brand-icon">🌿</div>
-          <h1 className="brand-title">EcoView</h1>
+          <h1 className="brand-title">MostarEcoView</h1>
         </div>
       </header>
 
@@ -28,15 +28,15 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
 
         {/* ROLE SELECTION CTA */}
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '5rem' }}>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}
             onClick={() => onEnter('worker')}
           >
             👷 Enter as Worker
           </button>
-          <button 
-            className="btn btn-secondary" 
+          <button
+            className="btn btn-secondary"
             style={{ padding: '1rem 2.5rem', fontSize: '1.1rem' }}
             onClick={() => onEnter('sponsor')}
           >
@@ -46,7 +46,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
 
         {/* FEATURE GRID */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', width: '100%', textAlign: 'left' }}>
-          
+
           <div className="card">
             <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🌱</div>
             <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--foreground)', marginBottom: '0.75rem', fontFamily: "'Outfit', sans-serif" }}>

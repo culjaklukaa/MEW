@@ -55,10 +55,11 @@ async function main() {
   const tokenId = 0;
   console.log(`Forest NFT minted with Token ID: ${tokenId}. State: Planted (0)`);
 
-  // 3. Sponsor deposits funds
+  // 3. Sponsor deposits funds (Phase 1)
   const depositAmount = ethers.parseUnits("5000", 18);
   const targetNDVI = 800;
   console.log(`\nSponsor is depositing ${ethers.formatUnits(depositAmount, 18)} USDC with Target NDVI ${targetNDVI}...`);
+  console.log("30% of funds will be instantly released to the worker to begin planting.");
   
   await mockUSDC.mint(sponsor.address, depositAmount);
   await mockUSDC.connect(sponsor).approve(escrowAddress, depositAmount);
@@ -66,36 +67,39 @@ async function main() {
   tx = await escrow.connect(sponsor).depositFunds(tokenId, worker.address, depositAmount, targetNDVI);
   await tx.wait();
   console.log("Funds deposited successfully.");
+  let workerBalance = await mockUSDC.balanceOf(worker.address);
+  console.log(`Worker USDC Balance (Phase 1 / 30%): ${ethers.formatUnits(workerBalance, 18)}`);
 
-  // 4. Simulate Oracle Updates
+  // 4. Simulate Oracle Updates & Milestones
   console.log("\nSimulating Oracle Data updates over time...");
   
-  console.log("Month 3: NDVI is 500");
+  console.log("\nMonth 3: NDVI is 500 (over 50% target)");
   tx = await mockOracle.updateNDVIScore(tokenId, 500);
   await tx.wait();
   
-  try {
-      console.log("Attempting to release funds early...");
-      await escrow.checkAndRelease(tokenId);
-  } catch (error) {
-      console.log("Failed to release funds as expected: Target NDVI not reached.");
-  }
+  console.log("Checking milestones...");
+  tx = await escrow.checkMilestones(tokenId);
+  await tx.wait();
+  workerBalance = await mockUSDC.balanceOf(worker.address);
+  console.log(`Worker USDC Balance (Phase 2 / +30%): ${ethers.formatUnits(workerBalance, 18)}`);
+  
+  let nftState = await forestNFT.forestStates(tokenId);
+  console.log(`Forest NFT State: ${nftState} (Should be 1 / Growing)`);
 
-  console.log("Month 6: NDVI is 850");
+  console.log("\nMonth 6: NDVI is 850 (over 100% target)");
   tx = await mockOracle.updateNDVIScore(tokenId, 850);
   await tx.wait();
 
-  // 5. Release Funds
-  console.log("\nAttempting to release funds after goal reached...");
-  tx = await escrow.checkAndRelease(tokenId);
+  // 5. Final Release
+  console.log("Checking milestones...");
+  tx = await escrow.checkMilestones(tokenId);
   await tx.wait();
-  console.log("Funds released successfully!");
 
   // 6. Verify final states
-  const workerBalance = await mockUSDC.balanceOf(worker.address);
-  console.log(`\nWorker Final USDC Balance: ${ethers.formatUnits(workerBalance, 18)}`);
+  workerBalance = await mockUSDC.balanceOf(worker.address);
+  console.log(`\nWorker Final USDC Balance (Phase 3 / +40%): ${ethers.formatUnits(workerBalance, 18)}`);
   
-  const nftState = await forestNFT.forestStates(tokenId);
+  nftState = await forestNFT.forestStates(tokenId);
   console.log(`Forest NFT State: ${nftState} (Should be 2 / Verified)`);
 
   console.log("\nSimulation Complete.");

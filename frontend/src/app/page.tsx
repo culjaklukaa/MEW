@@ -56,7 +56,7 @@ export default function Home() {
           const escrowData = await escrow.escrows(id);
           const currentNDVI = await mockOracle.getNDVIScore(id);
 
-          const amt = parseFloat(ethers.formatUnits(escrowData.amount, 18));
+          const amt = parseFloat(ethers.formatUnits(escrowData.totalAmount, 18));
           totalEscrowAmount += amt;
           totalNdvi += Number(currentNDVI);
 
@@ -79,7 +79,7 @@ export default function Home() {
             escrowAmount: amt.toLocaleString(),
             targetNDVI: Number(escrowData.targetNDVIScore),
             currentNDVI: Number(currentNDVI),
-            isReleased: escrowData.isReleased,
+            currentPhase: Number(escrowData.currentPhase),
             owner,
             metadata,
           });
@@ -125,9 +125,9 @@ export default function Home() {
           
           const escrowData = await escrow.escrows(simActiveForId);
           const targetNDVI = Number(escrowData.targetNDVIScore);
-          const isReleased = escrowData.isReleased;
+          const currentPhase = Number(escrowData.currentPhase);
 
-          if (isReleased) {
+          if (currentPhase === 3) {
             setSimActiveForId(null);
             return;
           }
@@ -143,12 +143,17 @@ export default function Home() {
           setSimMonthsPassed(prev => ({ ...prev, [simActiveForId]: localMonthsPassed }));
           addLog(`📡 Parcel #${simActiveForId}: Month ${localMonthsPassed}. NDVI updated to ${newScore}`);
 
-          // Check Release
-          if (newScore >= targetNDVI && !isReleased) {
-            addLog(`✅ Parcel #${simActiveForId}: Target reached! Attempting release...`);
-            const releaseTx = await escrow.checkAndRelease(simActiveForId);
+          // Check Milestones
+          if (currentPhase === 1 && newScore >= targetNDVI / 2) {
+            addLog(`✅ Parcel #${simActiveForId}: 50% target reached! Releasing phase 2...`);
+            const releaseTx = await escrow.checkMilestones(simActiveForId);
             await releaseTx.wait();
-            addLog(`💸 Parcel #${simActiveForId}: Funds Released to Worker!`);
+            addLog(`💸 Parcel #${simActiveForId}: Phase 2 Funds Released to Worker!`);
+          } else if (currentPhase === 2 && newScore >= targetNDVI) {
+            addLog(`✅ Parcel #${simActiveForId}: 100% target reached! Releasing final phase...`);
+            const releaseTx = await escrow.checkMilestones(simActiveForId);
+            await releaseTx.wait();
+            addLog(`💸 Parcel #${simActiveForId}: Final Phase Funds Released to Worker!`);
             setSimActiveForId(null); // Stop simulation
           }
 
@@ -165,7 +170,7 @@ export default function Home() {
   const handlePlant = async (metadata: ParcelMetadata) => {
     setLoading(true);
     try {
-      addLog(`🌱 Registering parcel "${metadata.name}"...`);
+      addLog(`🌱 Registering new area "${metadata.name}"...`);
       const { forestNFT } = await getContracts(roles.worker);
       const tx = await forestNFT.mintForest(
         roles.worker,
@@ -175,10 +180,10 @@ export default function Home() {
         metadata.area
       );
       await tx.wait();
-      addLog(`✅ Parcel "${metadata.name}" registered! (${metadata.area.toLocaleString()} m² at ${metadata.location})`);
+      addLog(`✅ Area "${metadata.name}" registered successfully! (${metadata.area.toLocaleString()} m² at ${metadata.location})`);
       await loadParcels();
     } catch (e: any) {
-      addLog(`❌ Mint failed: ${e.message}`);
+      addLog(`❌ Registration failed: ${e.message}`);
     } finally {
       setLoading(false);
     }

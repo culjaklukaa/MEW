@@ -16,7 +16,7 @@ export default function SatelliteTab({
   onStartSim, 
   onStopSim 
 }: SatelliteTabProps) {
-  const fundedParcels = parcels.filter(p => p.targetNDVI > 0 && !p.isReleased);
+  const fundedParcels = parcels.filter(p => p.targetNDVI > 0 && p.currentPhase < 3);
 
   return (
     <div className="animate-in">

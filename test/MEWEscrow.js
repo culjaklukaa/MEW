@@ -40,7 +40,7 @@ describe("MEW Escrow Lifecycle", function () {
 
   it("should complete the full lifecycle successfully", async function () {
     const depositAmount = ethers.parseUnits("1000", 18);
-    const targetNDVI = 750; // out of 1000
+    const targetNDVI = 800; // out of 1000
 
     // 1. Worker mints NFT (Parcel) with details
     await forestNFT.connect(worker).mintForest(
@@ -62,33 +62,60 @@ describe("MEW Escrow Lifecycle", function () {
     await mockUSDC.mint(sponsor.address, depositAmount);
     await mockUSDC.connect(sponsor).approve(await escrow.getAddress(), depositAmount);
 
-    // 3. Sponsor deposits funds
+    // 3. Sponsor deposits funds (Phase 1)
+    const upfrontAmount = (depositAmount * 30n) / 100n;
     await expect(escrow.connect(sponsor).depositFunds(tokenId, worker.address, depositAmount, targetNDVI))
       .to.emit(escrow, "FundsDeposited")
-      .withArgs(tokenId, sponsor.address, worker.address, depositAmount);
+      .withArgs(tokenId, sponsor.address, worker.address, depositAmount)
+      .to.emit(escrow, "FundsReleased")
+      .withArgs(tokenId, worker.address, upfrontAmount, 1);
 
     // Check escrow details
     const escrowData = await escrow.escrows(tokenId);
-    expect(escrowData.amount).to.equal(depositAmount);
+    expect(escrowData.totalAmount).to.equal(depositAmount);
+    expect(escrowData.currentPhase).to.equal(1);
 
-    // 4. Try to release funds before target is reached (should fail)
-    await mockOracle.updateNDVIScore(tokenId, 500); // 500 < 750
-    await expect(escrow.checkAndRelease(tokenId)).to.be.revertedWith("Target NDVI score not reached");
+    // Verify Worker received 30% upfront
+    let workerBalance = await mockUSDC.balanceOf(worker.address);
+    expect(workerBalance).to.equal(upfrontAmount);
 
-    // 5. Update Oracle with passing score
-    await mockOracle.updateNDVIScore(tokenId, 800); // 800 >= 750
+    // 4. Update Oracle with NDVI < 50% (should not change phase)
+    await mockOracle.updateNDVIScore(tokenId, 300); // 300 < 400
+    await escrow.checkMilestones(tokenId);
+    
+    let currentEscrow = await escrow.escrows(tokenId);
+    expect(currentEscrow.currentPhase).to.equal(1); // Still Phase 1
 
-    // 6. Release funds
-    await expect(escrow.checkAndRelease(tokenId))
+    // 5. Update Oracle to >= 50% target (Phase 2)
+    const phase2Amount = (depositAmount * 30n) / 100n;
+    await mockOracle.updateNDVIScore(tokenId, 450); // 450 >= 400
+    await expect(escrow.checkMilestones(tokenId))
       .to.emit(escrow, "FundsReleased")
-      .withArgs(tokenId, worker.address, depositAmount);
+      .withArgs(tokenId, worker.address, phase2Amount, 2);
 
-    // 7. Verify Worker received funds
-    const workerBalance = await mockUSDC.balanceOf(worker.address);
+    currentEscrow = await escrow.escrows(tokenId);
+    expect(currentEscrow.currentPhase).to.equal(2);
+    
+    workerBalance = await mockUSDC.balanceOf(worker.address);
+    expect(workerBalance).to.equal(upfrontAmount + phase2Amount);
+
+    let nftState = await forestNFT.forestStates(tokenId);
+    expect(nftState).to.equal(1); // ForestState.Growing
+
+    // 6. Update Oracle to >= 100% target (Phase 3)
+    const finalAmount = depositAmount - upfrontAmount - phase2Amount;
+    await mockOracle.updateNDVIScore(tokenId, 850); // 850 >= 800
+    await expect(escrow.checkMilestones(tokenId))
+      .to.emit(escrow, "FundsReleased")
+      .withArgs(tokenId, worker.address, finalAmount, 3);
+
+    currentEscrow = await escrow.escrows(tokenId);
+    expect(currentEscrow.currentPhase).to.equal(3);
+
+    workerBalance = await mockUSDC.balanceOf(worker.address);
     expect(workerBalance).to.equal(depositAmount);
 
-    // 8. Verify NFT State is Verified (2)
-    const nftState = await forestNFT.forestStates(tokenId);
+    nftState = await forestNFT.forestStates(tokenId);
     expect(nftState).to.equal(2); // ForestState.Verified
   });
 });

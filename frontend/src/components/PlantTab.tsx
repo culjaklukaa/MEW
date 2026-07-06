@@ -180,8 +180,8 @@ export default function PlantTab({ activeRole, loading, onPlant }: PlantTabProps
             {!isWorker
               ? '🔒 Switch to Worker Account'
               : loading
-                ? '⏳ Minting...'
-                : '🌱 Register & Mint Parcel'}
+                ? '⏳ Registering...'
+                : '🌱 Register New Area'}
           </button>
         </form>
       </div>

@@ -18,7 +18,7 @@ export interface Parcel {
   escrowAmount: string;
   targetNDVI: number;
   currentNDVI: number;
-  isReleased: boolean;
+  currentPhase: number; // 1: 30%, 2: 60%, 3: 100%
   owner: string;
   metadata?: ParcelMetadata;
 }

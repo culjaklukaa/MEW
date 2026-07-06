@@ -414,9 +414,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 20px;
   text-transform: uppercase;
 }
-.badge-planted { background: var(--bg-tertiary); color: var(--muted); }
+.badge-registered { background: var(--bg-tertiary); color: var(--muted); }
+.badge-funded { background: var(--accent-primary-light); color: var(--foreground); }
+.badge-planted { background: #e2d5b8; color: var(--color-forest-green); }
 .badge-growing { background: var(--accent-secondary-light); color: var(--accent-secondary); }
-.badge-verified { background: var(--accent-primary-light); color: var(--foreground); }
+.badge-verified { background: var(--accent-primary); color: white; }
 
 .parcel-details {
   font-size: 0.85rem;

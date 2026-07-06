@@ -235,9 +235,10 @@ export default function Home() {
   // Otherwise, render the main dashboard app shell
   return (
     <>
-      <header className="top-header">
-        <div
-          className="brand-area animate-in"
+      <div className="sticky-header-group">
+        <header className="top-header">
+          <div
+            className="brand-area animate-in"
           onClick={() => setAppStarted(false)}
           style={{ cursor: 'pointer' }}
           title="Return to Welcome Page"
@@ -301,6 +302,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       <main className="main-layout animate-in" style={{ animationDelay: '0.3s' }}>

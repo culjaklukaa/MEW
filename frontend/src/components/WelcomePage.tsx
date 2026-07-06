@@ -17,12 +17,12 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
       </header>
 
       {/* HERO SECTION */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(2rem, 5vw, 4rem) clamp(1rem, 5vw, 2rem)', maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 'clamp(2rem, 5vw, 4rem) clamp(1rem, 5vw, 2rem)', maxWidth: '75rem', margin: '0 auto', textAlign: 'center' }}>
         <h1 style={{ fontSize: 'clamp(2rem, 8vw, 3.5rem)', fontWeight: 800, color: 'var(--foreground)', marginBottom: '1.5rem', lineHeight: 1.1, fontFamily: "'Outfit', sans-serif" }}>
           Decentralized Reforestation,<br />
           <span style={{ color: 'var(--accent-primary)' }}>Verified by Satellite</span>
         </h1>
-        <p style={{ fontSize: '1.1rem', color: 'var(--muted)', maxWidth: '700px', margin: '0 auto 3rem auto', lineHeight: 1.6 }}>
+        <p style={{ fontSize: '1.1rem', color: 'var(--muted)', maxWidth: '43.75rem', margin: '0 auto 3rem auto', lineHeight: 1.6 }}>
           A next-generation platform utilizing Forest NFTs, NDVI Oracle data, and secure smart contract escrows to fund, verify, and reward physical reforestation efforts on-chain.
         </p>
 
@@ -45,7 +45,7 @@ export default function WelcomePage({ onEnter }: WelcomePageProps) {
         </div>
 
         {/* FEATURE GRID */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', width: '100%', textAlign: 'left' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(15.625rem, 1fr))', gap: '2rem', width: '100%', textAlign: 'left' }}>
 
           <div className="card">
             <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🌱</div>

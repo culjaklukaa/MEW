@@ -22,7 +22,7 @@ export default function DashboardTab({ parcels }: DashboardTabProps) {
 
       <div className="parcels-grid">
         {parcels.length === 0 ? (
-          <div className="card" style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', minHeight: '150px', alignItems: 'center'}}>
+          <div className="card" style={{gridColumn: '1 / -1', display: 'flex', justifyContent: 'center', minHeight: '9.375rem', alignItems: 'center'}}>
             <p style={{color: 'var(--muted)'}}>No parcels registered yet.</p>
           </div>
         ) : parcels.map(p => (

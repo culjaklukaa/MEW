@@ -21,20 +21,20 @@ export default function SatelliteTab({
   return (
     <div className="animate-in">
       <div className="page-title-box">
-        <h2 className="page-title">Simulate Growth</h2>
+        <h2 className="page-title">Satellite console</h2>
       </div>
       <div className="card">
         <p style={{color: 'var(--muted)', marginBottom: '2rem', lineHeight: 1.6}}>
-          Watch trees grow! Select a funded parcel and start the time simulator. Every 5 seconds equals 6 months of growth, increasing the NDVI score until Escrow is automatically released.
+          Select a funded parcel and start the satellite observation. Satellite monitoring continues until Escrow is automatically released.
         </p>
 
         {simActiveForId !== null ? (
           <div style={{textAlign: 'center', padding: '2rem 0'}}>
             <h3 style={{color: 'var(--foreground)'}}>
-              Running Simulation for {parcels.find((parcel) => parcel.id === simActiveForId)?.metadata?.name || `Parcel #${simActiveForId}`}
+              Running observation for {parcels.find((parcel) => parcel.id === simActiveForId)?.metadata?.name || `Parcel #${simActiveForId}`}
             </h3>
             <div className="sim-timer">{simMonthsPassed / 12} Years Passed</div>
-            <p style={{color: 'var(--muted)', marginBottom: '2rem'}}>Check the Activity Log for real-time NDVI Oracle updates!</p>
+            <p style={{color: 'var(--muted)', marginBottom: '2rem'}}>Check the on-chain activity log for NDVI Oracle updates!</p>
             <button className="btn btn-secondary" onClick={onStopSim}>Stop Simulation</button>
           </div>
         ) : (

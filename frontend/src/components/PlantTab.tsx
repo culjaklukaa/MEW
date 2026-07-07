@@ -47,10 +47,6 @@ export default function PlantTab({ activeRole, loading, onPlant }: PlantTabProps
       </div>
 
       <div className="card plant-form-card">
-        <p className="plant-description">
-          Register a new reforestation parcel on the blockchain. Provide the parcel details below — once minted as a Forest NFT, sponsors can fund it and satellite monitoring begins.
-        </p>
-
         <form onSubmit={handleSubmit} className="plant-form">
           {/* Parcel Name */}
           <div className="form-group">

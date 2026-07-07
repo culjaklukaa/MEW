@@ -20,5 +20,6 @@ export interface Parcel {
   currentNDVI: number;
   currentPhase: number; // 1: 30%, 2: 60%, 3: 100%
   owner: string;
+  isReleased?: boolean;
   metadata?: ParcelMetadata;
 }

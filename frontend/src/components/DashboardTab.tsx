@@ -34,7 +34,7 @@ export default function DashboardTab({ parcels }: DashboardTabProps) {
                 </span>
                 <span className="parcel-id-sub">#{p.id}</span>
               </div>
-              {renderStateBadge(p.state, p.isReleased, p.targetNDVI, p.currentNDVI)}
+              {renderStateBadge(p.state, Boolean(p.isReleased), p.targetNDVI, p.currentNDVI)}
             </div>
 
             {/* Metadata row */}

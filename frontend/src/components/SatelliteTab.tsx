@@ -30,7 +30,9 @@ export default function SatelliteTab({
 
         {simActiveForId !== null ? (
           <div style={{textAlign: 'center', padding: '2rem 0'}}>
-            <h3 style={{color: 'var(--foreground)'}}>Running Simulation for Parcel #{simActiveForId}</h3>
+            <h3 style={{color: 'var(--foreground)'}}>
+              Running Simulation for {parcels.find((parcel) => parcel.id === simActiveForId)?.metadata?.name || `Parcel #${simActiveForId}`}
+            </h3>
             <div className="sim-timer">{simMonthsPassed / 12} Years Passed</div>
             <p style={{color: 'var(--muted)', marginBottom: '2rem'}}>Check the Activity Log for real-time NDVI Oracle updates!</p>
             <button className="btn btn-secondary" onClick={onStopSim}>Stop Simulation</button>
@@ -40,7 +42,9 @@ export default function SatelliteTab({
             {fundedParcels.map(p => (
               <div className="card" key={p.id} style={{display: 'flex', flexDirection: 'column', gap: '1.5rem', boxShadow: 'none', border: '1px solid var(--border-medium)'}}>
                 <div>
-                  <h4 style={{fontSize: '1.25rem', color: 'var(--foreground)', marginBottom: '0.5rem'}}>Parcel #{p.id}</h4>
+                  <h4 style={{fontSize: '1.25rem', color: 'var(--foreground)', marginBottom: '0.5rem'}}>
+                    {p.metadata?.name || `Parcel #${p.id}`}
+                  </h4>
                   <div style={{fontSize: '0.85rem', color: 'var(--muted)'}}>
                     Target NDVI: {p.targetNDVI} | Current: <span style={{color: 'var(--foreground)', fontWeight: 600}}>{p.currentNDVI}</span>
                   </div>

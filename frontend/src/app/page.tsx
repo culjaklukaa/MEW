@@ -38,6 +38,18 @@ export default function Home() {
     setLogs((prev) => [{ time, msg }, ...prev]);
   };
 
+  const getErrorMessage = (error: unknown) => {
+    if (error instanceof Error) return error.message;
+    return "Unknown error";
+  };
+
+  const getParcelLabel = useCallback((id: number | null) => {
+    if (id === null) return "selected parcel";
+
+    const parcel = parcels.find((item) => item.id === id);
+    return parcel?.metadata?.name ? parcel.metadata.name : `Parcel #${id}`;
+  }, [parcels]);
+
   const loadParcels = useCallback(async () => {
     if (!appStarted) return; // Don't load if app hasn't started yet
 
@@ -84,7 +96,7 @@ export default function Home() {
             metadata,
           });
           id++;
-        } catch (e) {
+        } catch {
           // Reverts when token doesn't exist
           break;
         }
@@ -95,17 +107,21 @@ export default function Home() {
       setTotalDonated(totalEscrowAmount.toLocaleString());
       setAvgNDVI(loadedParcels.length > 0 ? Math.round(totalNdvi / loadedParcels.length) : 0);
 
-    } catch (err) {
-      console.error("Error loading parcels", err);
+    } catch (error: unknown) {
+      console.error("Error loading parcels", error);
     }
   }, [appStarted]);
 
   useEffect(() => {
-    if (appStarted) {
-      loadParcels();
-      const int = setInterval(loadParcels, 5000);
-      return () => clearInterval(int);
-    }
+    if (!appStarted) return;
+
+    const refreshParcels = () => {
+      void loadParcels();
+    };
+
+    refreshParcels();
+    const int = setInterval(refreshParcels, 5000);
+    return () => clearInterval(int);
   }, [appStarted, loadParcels]);
 
   // Simulation Timer Logic
@@ -129,6 +145,7 @@ export default function Home() {
 
           if (currentPhase === 3) {
             setSimActiveForId(null);
+            addLog(`🏁 ${getParcelLabel(simActiveForId)} has already completed all fund releases.`);
             return;
           }
 
@@ -139,32 +156,65 @@ export default function Home() {
           const tx = await adminOracle.updateNDVIScore(simActiveForId, newScore);
           await tx.wait();
           
+          const parcelLabel = getParcelLabel(simActiveForId);
           localMonthsPassed += 6;
           setSimMonthsPassed(prev => ({ ...prev, [simActiveForId]: localMonthsPassed }));
-          addLog(`📡 Parcel #${simActiveForId}: Month ${localMonthsPassed}. NDVI updated to ${newScore}`);
+          addLog(`📡 ${parcelLabel}: Month ${localMonthsPassed}. NDVI updated to ${newScore}`);
+
+          // Refresh escrow phase before attempting a release so we don't trip over already-completed parcels.
+          const latestEscrowData = await escrow.escrows(simActiveForId);
+          const latestPhase = Number(latestEscrowData.currentPhase);
+
+          if (latestPhase === 3) {
+            setSimActiveForId(null);
+            addLog(`🏁 ${parcelLabel} has already completed all fund releases.`);
+            return;
+          }
 
           // Check Milestones
-          if (currentPhase === 1 && newScore >= targetNDVI / 2) {
-            addLog(`✅ Parcel #${simActiveForId}: 50% target reached! Releasing phase 2...`);
-            const releaseTx = await escrow.checkMilestones(simActiveForId);
-            await releaseTx.wait();
-            addLog(`💸 Parcel #${simActiveForId}: Phase 2 Funds Released to Worker!`);
-          } else if (currentPhase === 2 && newScore >= targetNDVI) {
-            addLog(`✅ Parcel #${simActiveForId}: 100% target reached! Releasing final phase...`);
-            const releaseTx = await escrow.checkMilestones(simActiveForId);
-            await releaseTx.wait();
-            addLog(`💸 Parcel #${simActiveForId}: Final Phase Funds Released to Worker!`);
-            setSimActiveForId(null); // Stop simulation
+          if (latestPhase === 1 && newScore >= targetNDVI / 2) {
+            addLog(`✅ ${parcelLabel}: 50% target reached! Releasing phase 2...`);
+            try {
+              const releaseTx = await escrow.checkMilestones(simActiveForId);
+              await releaseTx.wait();
+              addLog(`💸 ${parcelLabel}: Phase 2 Funds Released to Worker!`);
+            } catch (error: unknown) {
+              const message = getErrorMessage(error);
+              if (message.includes("All funds already released")) {
+                addLog(`ℹ️ ${parcelLabel} has already completed its release.`);
+                setSimActiveForId(null);
+                return;
+              }
+              addLog(`❌ Release Error: ${message}`);
+              return;
+            }
+          } else if (latestPhase === 2 && newScore >= targetNDVI) {
+            addLog(`✅ ${parcelLabel}: 100% target reached! Releasing final phase...`);
+            try {
+              const releaseTx = await escrow.checkMilestones(simActiveForId);
+              await releaseTx.wait();
+              addLog(`💸 ${parcelLabel}: Final Phase Funds Released to Worker!`);
+              setSimActiveForId(null); // Stop simulation
+            } catch (error: unknown) {
+              const message = getErrorMessage(error);
+              if (message.includes("All funds already released")) {
+                addLog(`ℹ️ ${parcelLabel} has already completed its release.`);
+                setSimActiveForId(null);
+                return;
+              }
+              addLog(`❌ Release Error: ${message}`);
+              return;
+            }
           }
 
           loadParcels();
-        } catch(e: any) {
-          addLog(`❌ Sim Error: ${e.message}`);
+        } catch (error: unknown) {
+          addLog(`❌ Sim Error: ${getErrorMessage(error)}`);
         }
       }, 5000);
     }
     return () => clearInterval(timer);
-  }, [simActiveForId, loadParcels]);
+  }, [simActiveForId, loadParcels, getParcelLabel, simMonthsPassed]);
 
   // === ACTIONS ===
   const handlePlant = async (metadata: ParcelMetadata) => {
@@ -182,8 +232,8 @@ export default function Home() {
       await tx.wait();
       addLog(`✅ Area "${metadata.name}" registered successfully! (${metadata.area.toLocaleString()} m² at ${metadata.location})`);
       await loadParcels();
-    } catch (e: any) {
-      addLog(`❌ Registration failed: ${e.message}`);
+    } catch (error: unknown) {
+      addLog(`❌ Registration failed: ${getErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }
@@ -199,7 +249,7 @@ export default function Home() {
 
     setLoading(true);
     try {
-      addLog(`💰 Sponsoring Parcel #${id} with ${amt} USDC...`);
+      addLog(`💰 Sponsoring ${getParcelLabel(id)} with ${amt} USDC...`);
       const { mockUSDC, escrow } = await getContracts(roles.sponsor);
 
       const parsedAmt = ethers.parseUnits(amt, 18);
@@ -210,11 +260,11 @@ export default function Home() {
       const tx = await escrow.depositFunds(id, roles.worker, parsedAmt, target);
       await tx.wait();
 
-      addLog(`✅ Funded Parcel #${id} successfully!`);
+      addLog(`✅ Funded ${getParcelLabel(id)} successfully!`);
       await loadParcels();
       form.reset();
-    } catch (e: any) {
-      addLog(`❌ Fund failed: ${e.message}`);
+    } catch (error: unknown) {
+      addLog(`❌ Fund failed: ${getErrorMessage(error)}`);
     } finally {
       setLoading(false);
     }

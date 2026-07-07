@@ -24,7 +24,9 @@ export default function FundTab({ parcels, activeRole, loading, onFund }: FundTa
           <label className="input-label">Select Parcel ID</label>
           <select name="parcelId" className="input-field" required>
             {unfundedParcels.map(p => (
-              <option key={p.id} value={p.id}>Parcel #{p.id} (Unfunded)</option>
+              <option key={p.id} value={p.id}>
+                {p.metadata?.name ? `${p.metadata.name}` : `Parcel #${p.id}`}
+              </option>
             ))}
             {unfundedParcels.length === 0 && (
               <option value="">No unfunded parcels available</option>

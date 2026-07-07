@@ -33,9 +33,7 @@ export default function SatelliteTab({
             <h3 style={{color: 'var(--foreground)'}}>Running Simulation for Parcel #{simActiveForId}</h3>
             <div className="sim-timer">{simMonthsPassed / 12} Years Passed</div>
             <p style={{color: 'var(--muted)', marginBottom: '2rem'}}>Check the Activity Log for real-time NDVI Oracle updates!</p>
-            <button className="btn btn-secondary" onClick={onStopSim}>
-              Stop Simulation
-            </button>
+            <button className="btn btn-secondary" onClick={onStopSim}>Stop Simulation</button>
           </div>
         ) : (
           <div className="parcels-grid" style={{gridTemplateColumns: '1fr'}}>

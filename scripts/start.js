@@ -130,7 +130,7 @@ async function main() {
   process.on("SIGTERM", cleanup);
 
   log("MAIN", "====================================================");
-  log("MAIN", "🌿 MEW is running!");
+  log("MAIN", "   MEW is running!");
   log("MAIN", "   Blockchain:  http://127.0.0.1:8545");
   log("MAIN", "   Frontend:    http://localhost:3000");
   log("MAIN", "   Press Ctrl+C to stop.");
